@@ -1,0 +1,23 @@
+{
+    "name": "node-live-notify"
+  , "version": "0.0.1"
+  , "description": "Adds live notifications to web sites"
+  , "homepage": "https://github.com/JeromeParadis/node-live-notify"
+  , "keywords": ["notifications", "socket.io", "live"]
+  , "author": "Jerome Paradis <jerome@buyosphere.com>"
+  , "contributors": [
+        { "name": "Robert Mowery", "email": "rmowery@gmail.com" },
+    ]
+  , "repository":{
+        "type": "git"
+      , "url": "https://github.com/JeromeParadis/node-live-notify.git"
+    }
+  , "dependencies": {
+        "socket.io": "0.8.7"
+      , "redis": "0.6.7"
+      , "connect": "1.8.5"
+      , "express-resource": "0.2.4"
+    }
+  , "main": "index"
+  , "engines": { "node": ">= 0.4.0" }
+}
