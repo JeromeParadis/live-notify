@@ -1,9 +1,10 @@
 var express= require('express');
 
-var socket_auth = require('../socket-auth')
+var SocketAuth = require('../socket-auth')
    ,Api = require('./lib/api')
-   ,RedSocket = require('../red-socket');
-
+   ,RedSocket = require('../red-socket')
+   ,models = require("./models/models")
+   ,Transport = require("./lib/transport");
 /**
  * Export the wrapper.
  */
@@ -14,17 +15,21 @@ function Notify(app, io, options) {
 	app.configure(function(){
   		app.use(express.bodyParser());
 	});
+	// models.Backbone.setClient(rc);
+	//console.log(models);
+	models.Backbone.initServer(app);
+	this.models = models;
 	this.rsr = RedSocket(io);
 	this.auth_plugin = (options && options.auth_plugin) || "django-auth";
 	this.api_key = (options && options.auth_plugin) || null;
-	auth = socket_auth(io, this.auth_plugin, options);
-
-	var messages_api = Api.MessagesApi(this.rsr);
+	this.socket_auth = new SocketAuth(io, this.auth_plugin, options);
+	this.transport = new Transport(this);
 
 	//if (app.resource) {
-	app.resource('api/messages', messages_api, { format: 'json' });
+	app.resource('api/message', Api.MessageApi(this), { format: 'json' });
+	app.resource('api/events', Api.EventsApi(this), { format: 'json' });
 
 	//}
 
-	return auth;
+	return this;
 }
