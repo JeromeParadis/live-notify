@@ -58,6 +58,13 @@
       $(self.icon_selector).addClass("button-red").val(nb); 
     });
 
+    // Create views
+    // ----------------------------------
+    require([this.url + 'models/models.js'],function() {
+      //alert(models.Event)
+    });
+
+
     return this;
 
   };

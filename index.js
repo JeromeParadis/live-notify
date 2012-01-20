@@ -58,6 +58,10 @@ function Notify(app, io, options) {
 	app.get('/js/*', function(req, res){
 	    res.sendfile(__dirname + '/public'+req.url);
 	});
+	app.get('/models/*', function(req, res){
+	    console.log("req.url",req.url)
+	    res.sendfile(__dirname + req.url);
+	});
 
 	//}
 
