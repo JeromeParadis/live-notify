@@ -8,7 +8,9 @@
         server = true;
 
     } else {
-        models = this.models = {};
+        if (!models)
+          models = {};
+        this.models = models;
     }
 
     //
