@@ -4,6 +4,7 @@
     this.wrapper_selector = (options && options.wrapper_selector) || '#notify-wrapper';
     this.icon_selector = (options && options.icon_selector) || '#notify-icon';
     this.notifier = null;
+    this.notes_summary = null;
     var self = this;
 
     if (!sessionid) {
@@ -39,20 +40,19 @@
 
     // Initial notes on page load
     // ----------------------------------
-    socket.on('notes-count', function (data) {
+    socket.on('notes-count', function (count) {
       console.log("Count!");
-      var nb_notes = data || 0;
-      self.notifier.update_count(nb_notes);
+      self.notifier.update_count(count);
     });
 
     // Initial notes on page load
     // ----------------------------------
-    socket.on('notes-init', function (data) {
+    socket.on('notes-init', function (notes) {
       console.log("Init!");
 
-      var nb_notes = (data && data.length) || 0;
+      var nb_notes = (notes && notes.length) || 0;
       self.notifier.update_count(nb_notes);
-      self.notifier.show_notes();
+      self.notes_summary = new NotificationSummary(notes);
     });
 
     // Direct message
@@ -87,6 +87,7 @@
       nb_notes: 0,
       wrapper_selector: self.wrapper_selector,
       icon_selector: self.icon_selector,
+      template: $.template("#template-notify-icon"),
       events: {
         "click .notify-icon":      "click_expand",
         },
@@ -97,7 +98,6 @@
         $(this.icon_selector).removeAttr("disabled").removeClass("s-disabled"); 
         console.log("View initialized");
       },
-      template: $.template("#template-notify-icon"),
       render: function() {
         $(this.el).html(this.template());
         return this;
@@ -109,7 +109,11 @@
       },
       click_expand: function() {
         console.log("click");
-        socket.emit('get_initial_notes');
+        if (self.notes_summary) {
+          $(self.notes_summary.el).toggle();
+        } else {
+          socket.emit('get_initial_notes');
+        }
         return this;
       },
       show_notes: function() {
@@ -133,9 +137,33 @@
     NotificationSummary = Backbone.View.extend({
       tagName: "div",
       className: "notify-summary",
-      nb_notes: 0,
+      template: $.template("#template-notify-summary"),
+      notifications: [],
       events: {
+        },
+      initialize: function(notes) {
+        for (var i=0;i<notes.length;i++) {
+          var note = new models.Event();
+          note.mport(notes[i]);
+          this.notifications.push(note);
         }
+        this.notifications = new models.Events(this.notifications);
+        $(this.el).html("");
+        this.render();
+        $(self.wrapper_selector).append(this.el);
+        $(this.icon_selector).removeAttr("disabled").removeClass("s-disabled"); 
+        console.log("View initialized");
+      },
+      render: function() {
+        $(this.el).html(this.template({notifications: this.notifications.models}));
+        return this;
+      },
+      destroy: function() {
+        this.notifications.reset();
+        this.notifications = null;
+        this.remove();
+      }
+      
     });
 
 
