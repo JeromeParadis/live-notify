@@ -40,9 +40,9 @@
 
     // Initial notes on page load
     // ----------------------------------
-    socket.on('notes-count', function (count) {
-      console.log("Count!");
-      self.notifier.update_count(count);
+    socket.on('notes-count', function (count,unread_count) {
+      console.log("Count,unread",count,unread_count);
+      self.notifier.update_count(count,unread_count);
     });
 
     // Initial notes on page load
@@ -51,8 +51,8 @@
       console.log("Init!");
 
       var nb_notes = (notes && notes.length) || 0;
-      self.notifier.update_count(nb_notes);
       self.notes_summary = new NotificationSummary(notes);
+      self.notifier.update_count(self.notifier.nb_notes,0);
     });
 
     // Direct message
@@ -66,8 +66,10 @@
     socket.on('notify', function (data) {
       console.log(data);
 
-      var nb = parseFloat($(self.icon_selector).val()) + 1;
-      $(self.icon_selector).addClass("button-red").val(nb); 
+      self.notifier.increase_count();
+      if (self.notes_summary) {
+        self.notes_summary.add_note();
+      }
     });
 
     // Create views
@@ -85,6 +87,7 @@
       tagName: "div",
       className: "notify-notifier",
       nb_notes: 0,
+      nb_unread_notes: 0,
       wrapper_selector: self.wrapper_selector,
       icon_selector: self.icon_selector,
       template: $.template("#template-notify-icon"),
@@ -102,10 +105,17 @@
         $(this.el).html(this.template());
         return this;
       },
-      update_count: function(nb) {
+      update_count: function(nb,unread) {
         this.nb_notes = nb;
+        this.nb_unread_notes = unread;
         this.render_count();
         return this;
+      },
+      increase_count: function() {
+        this.nb_notes = this.nb_notes+1;
+        this.nb_unread_notes = this.nb_unread_notes+1;
+        this.render_count();
+        return this;        
       },
       click_expand: function() {
         console.log("click");
@@ -122,11 +132,14 @@
         return this;
       },
       render_count: function() {
-        if (this.nb_notes > 0) 
+        if (this.nb_unread_notes > 0)  {
+          $(this.icon_selector).val(this.nb_unread_notes); 
           $(this.icon_selector).addClass("button-red");
-        else
+       }
+        else {
           $(this.icon_selector).removeClass("button-red");
-        $(this.icon_selector).val(this.nb_notes); 
+          $(this.icon_selector).val('!'); 
+        }
 
         return this;
       }
@@ -137,6 +150,7 @@
     NotificationSummary = Backbone.View.extend({
       tagName: "div",
       className: "notify-summary",
+      MAX_NOTES: 20,
       template: $.template("#template-notify-summary"),
       notifications: [],
       events: {
@@ -151,8 +165,17 @@
         $(this.el).html("");
         this.render();
         $(self.wrapper_selector).append(this.el);
-        $(this.icon_selector).removeAttr("disabled").removeClass("s-disabled"); 
+        $(self.icon_selector).removeAttr("disabled").removeClass("s-disabled"); 
+        $(self.icon_selector).removeClass("button-red");
         console.log("View initialized");
+      },
+      add_note: function(notification) {
+          var note = new models.Event(notification);
+          // note.mport(notification);
+          this.notifications.add(note,{at: 0});
+          this.render();
+
+          return this;        
       },
       render: function() {
         $(this.el).html(this.template({notifications: this.notifications.models}));

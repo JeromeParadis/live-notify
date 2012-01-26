@@ -27,6 +27,7 @@ function Notify(app, io, options) {
 	this.models = models;
 	this.rsr = RedSocket(io,{debug: true});
 	this.auth_plugin = (options && options.auth_plugin) || "django-auth";
+	this.callback_api = (options && options.callback_api) || null;
 	this.api_key = (options && options.auth_plugin) || null;
 	this.transport = new Transport(this);
 
@@ -44,14 +45,19 @@ function Notify(app, io, options) {
 		self.rsr.r_send_user(socket.id,"ready","authenticated");
 		if (session && session.user_id) {
 			var notifications = new Notifications.UserNotifications(session.user_id,self);
-			notifications.get_notifications_count(function(err,notes) {
-				self.rsr.r_send_user(socket.id,"notes-count",notes);
+			notifications.get_notifications_count(function(err,nb_notes,nb_unread) {
+				console.log("Notes total, unread:",nb_notes,nb_unread);
+				// self.rsr.r_send_user(socket.id,"notes-count",JSON.stringify({nb_notes: nb_notes,nb_unread: nb_notes}));
+				socket.emit("notes-count",nb_notes,nb_unread);
 			});
 			socket.on("get_initial_notes",function() {
-				console.log("get_initial_notes()")
-				notifications.get_notifications(1,20,function(err,notes) {
-					console.log("Received notes!")
-					self.rsr.r_send_user(socket.id,"notes-init",notes);
+				console.log("mark read()")
+				notifications.mark_all_read(function(e,r) {
+					console.log("get_initial_notes()")
+					notifications.get_notifications(1,20,function(err,notes) {
+						console.log("Received notes!")
+						self.rsr.r_send_user(socket.id,"notes-init",notes);
+					});					
 				});
 			});
 		}
@@ -63,6 +69,7 @@ function Notify(app, io, options) {
 	//if (app.resource) {
 	app.resource('api/message', Api.MessageApi(this), { format: 'json' });
 	app.resource('api/events', Api.EventsApi(this), { format: 'json' });
+	app.resource('api/event', Api.EventApi(this), { format: 'json' });
 	app.get('/js/live-notify.js', function(req, res){
 	    res.sendfile(__dirname + '/public/js/live-notify.js');
 	});

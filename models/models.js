@@ -24,7 +24,8 @@
       "user_id":  null,
       "event_id":  null,
       "text": null,
-      "type": "notify"
+      "type": "notify",
+      "was_read": false
     },
     name: "notify.event",
     error: function(model, error) {
