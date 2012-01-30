@@ -60,6 +60,10 @@ function Notify(app, io, options) {
 					});					
 				});
 			});
+			socket.on("mark_notes_read",function() {
+				console.log("mark notes read()")
+				notifications.mark_all_read();
+			});
 		}
 
 	});

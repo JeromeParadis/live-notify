@@ -121,6 +121,11 @@
         console.log("click");
         if (self.notes_summary) {
           $(self.notes_summary.el).toggle();
+          if (!($(self.notes_summary.el).is(':visible')) && this.nb_unread_notes > 0) {
+            // Mark as read
+            socket.emit('mark_notes_read');
+            this.update_count(self.notifier.nb_notes,0);
+          }
         } else {
           socket.emit('get_initial_notes');
         }
