@@ -45,24 +45,42 @@ function Notify(app, io, options) {
 		self.rsr.r_send_user(socket.id,"ready","authenticated");
 		if (session && session.user_id) {
 			var notifications = new Notifications.UserNotifications(session.user_id,self);
-			notifications.get_notifications_count(function(err,nb_notes,nb_unread) {
-				console.log("Notes total, unread:",nb_notes,nb_unread);
-				// self.rsr.r_send_user(socket.id,"notes-count",JSON.stringify({nb_notes: nb_notes,nb_unread: nb_notes}));
-				socket.emit("notes-count",nb_notes,nb_unread);
-			});
-			socket.on("get_initial_notes",function() {
-				console.log("mark read()")
-				notifications.mark_all_read(function(e,r) {
-					console.log("get_initial_notes()")
-					notifications.get_notifications(1,20,function(err,notes) {
-						console.log("Received notes!")
-						self.rsr.r_send_user(socket.id,"notes-init",notes);
-					});					
+			var refresh_count = function() {
+				notifications.get_notifications_count(function(err,nb_notes,nb_unread) {
+					console.log("Notes total, unread:",nb_notes,nb_unread);
+					self.rsr.r_send_user(socket.id,"notes-count",{nb_notes: nb_notes,nb_unread: nb_notes});
+					//socket.emit("notes-count",nb_notes,nb_unread);
 				});
+			};
+			refresh_count();
+			var mark_all_read = function(fetch_notes) {
+				notifications.mark_all_read(function(e,r) {
+					if (fetch_notes) {
+						console.log("get_initial_notes()")
+						notifications.get_notifications(1,20,function(err,notes) {
+							console.log("Received notes!")
+							self.rsr.r_send_user(socket.id,"notes-init",notes);
+						});					
+					}
+					else
+						refresh_count();
+				});
+			};
+			socket.on("get_initial_notes",function() {
+				console.log("mark read()");
+				mark_all_read(true);
+				// notifications.mark_all_read(function(e,r) {
+				// 	console.log("get_initial_notes()")
+				// 	notifications.get_notifications(1,20,function(err,notes) {
+				// 		console.log("Received notes!")
+				// 		self.rsr.r_send_user(socket.id,"notes-init",notes);
+				// 	});					
+				// });
 			});
 			socket.on("mark_notes_read",function() {
-				console.log("mark notes read()")
-				notifications.mark_all_read();
+				console.log("mark notes read()");
+				mark_all_read(false);
+				// notifications.mark_all_read();
 			});
 		}
 

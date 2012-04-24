@@ -40,9 +40,9 @@
 
     // Initial notes on page load
     // ----------------------------------
-    socket.on('notes-count', function (count,unread_count) {
-      console.log("Count,unread",count,unread_count);
-      self.notifier.update_count(count,unread_count);
+    socket.on('notes-count', function (results) {
+      console.log("Count,unread",results.nb_notes,results.nb_unread);
+      self.notifier.update_count(results.nb_notes,results.nb_unread);
     });
 
     // Initial notes on page load
