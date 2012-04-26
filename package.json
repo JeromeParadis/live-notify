@@ -6,7 +6,7 @@
   , "keywords": ["notifications", "socket.io", "live"]
   , "author": "Jerome Paradis <jerome@buyosphere.com>"
   , "contributors": [
-        { "name": "Robert Mowery", "email": "rmowery@gmail.com" },
+        { "name": "Robert Mowery", "email": "rmowery@gmail.com" }
     ]
   , "repository":{
         "type": "git"
