@@ -1,4 +1,4 @@
-  var LiveNotify = function(url,sessionid,options) {
+var LiveNotify = function(url,sessionid,options) {
     this.url = url;
     this.sessionid = sessionid;
     this.wrapper_selector = (options && options.wrapper_selector) || '#notify-wrapper';
@@ -8,8 +8,9 @@
     var self = this;
 
     if (!sessionid) {
-      return this;
+        return this;
     }
+    
     console.log("opening socket for cookie: " + this.sessionid);
     var socket = io.connect(this.url);
 
@@ -19,63 +20,67 @@
 
     // Session authorized
     // ----------------------------------
-    socket.on('authorize', function (data) {
-      console.log(data);
-      socket.emit('auth', { sessionid: self.sessionid });
-      console.log("Connected to notify!");
-      // Set ping to keep session alive
-      // ----------------------------------
-      var ping = function() {
-        socket.emit('auth_ping', { sessionid: self.sessionid });
-      }
-      setInterval(ping,1000 * 30);
-    });
+    //~ socket.on('authorize', function (data) {
+      //~ console.log(data);
+      //~ socket.emit('auth', { sessionid: self.sessionid });
+      //~ console.log("Connected to notify!");
+      //~ // Set ping to keep session alive
+      //~ // ----------------------------------
+      //~ var ping = function() {
+        //~ socket.emit('auth_ping', { sessionid: self.sessionid });
+      //~ }
+      //~ setInterval(ping,1000 * 30);
+    //~ });
 
     // Ready to receive and transmit
     // ----------------------------------
-    socket.on('ready', function (data) {
-      console.log("Ready!");
-      self.notifier = new Notifier();
+    socket.on('connect', function (data) {
+        console.log("Ready!");
+        // Send the session info.
+        //socket.emit('auth', { sessionid: self.sessionid });
+        self.notifier = new Notifier();
     });
+    
+    
 
     // Initial notes on page load
     // ----------------------------------
     socket.on('notes-count', function (results) {
-      console.log("Count,unread",results.nb_notes,results.nb_unread);
-      self.notifier.update_count(results.nb_notes,results.nb_unread);
+        console.log("Count,unread",results.nb_notes,results.nb_unread);
+        self.notifier.update_count(results.nb_notes,results.nb_unread);
     });
 
     // Initial notes on page load
     // ----------------------------------
     socket.on('notes-init', function (notes) {
-      console.log("Init!");
+        console.log("Init!");
 
-      var nb_notes = (notes && notes.length) || 0;
-      self.notes_summary = new NotificationSummary(notes);
-      self.notifier.update_count(self.notifier.nb_notes,0);
+        var nb_notes = (notes && notes.length) || 0;
+        self.notes_summary = new NotificationSummary(notes);
+        self.notifier.update_count(self.notifier.nb_notes,0);
     });
 
     // Direct message
     // ----------------------------------
     socket.on('message', function (data) {
-      alert(data.from + " says: " + data.message);
+        alert(data.from + " says: " + data.message);
     });
 
     // New notification received
     // ----------------------------------
     socket.on('notify', function (data) {
-      console.log(data);
+        console.log(data);
 
-      self.notifier.increase_count();
-      if (self.notes_summary) {
-        self.notes_summary.add_note();
-      }
+        self.notifier.increase_count();
+        if (self.notes_summary) {
+            self.notes_summary.add_note();
+        }
     });
 
     // Create views
     // ----------------------------------
     require([this.url + 'models/models.js'],function() {
-      //alert(models.Event)
+        //alert(models.Event)
     });
 
     // Views
@@ -199,4 +204,4 @@
 
     return this;
 
-  };
+};

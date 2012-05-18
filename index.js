@@ -6,85 +6,96 @@ var SocketAuth = require('../socket-auth')
    ,models = require("./models/models")
    ,Transport = require("./lib/transport")
    ,Notifications = require("./lib/notifications");
+
 /**
  * Export the wrapper.
  */
 
 exports = module.exports = Notify;
 
+/**
+ * @param app:ExpressAPI
+ * @param io:SocketIO
+ * @param options:Object
+ */
 function Notify(app, io, options) {
 
 	// Configuration
 	// -----------------------
 	app.configure(function(){
-  		app.use(express.bodyParser());
+		app.use(express.bodyParser());
 	});
 
-	// models.Backbone.setClient(rc);
-	//console.log(models);
-	models.Backbone.initServer(app);
-	this.redis_prefix = '';
+	if (!options) options = {};
+	this.redis_prefix = options.redis_namespace || '';
 	this.models = models;
-	this.rsr = RedSocket(io,{debug: true});
-	this.auth_plugin = (options && options.auth_plugin) || "django-auth";
-	this.callback_api = (options && options.callback_api) || null;
-	this.api_key = (options && options.auth_plugin) || null;
+	this.rsr = RedSocket(io, {debug: false, redis_prefix: redis_prefix});
+	var auth_plugin = options.auth_plugin || null;
+	this.callback_api = options.callback_api || null;
 	this.transport = new Transport(this);
+	this.socket_auth = new SocketAuth(io, auth_options);
 
-	// Patch models with Redis prefix
-	// -----------------------
-	if (options && options.redis_namespace) {
-		//models.Event.name = options.redis_namespace + models.Event.name;
-		this.redis_prefix = options.redis_namespace;
-	}
+	
+	models.Backbone.setClient(this.rsr.rc);
+	models.Backbone.initServer(app);
 
 	// Define auth acknowledge
 	// -----------------------
 	var self = this;
-	this.socket_auth = new SocketAuth(io, this.auth_plugin, options, function(socket,session) {
-		self.rsr.r_send_user(socket.id,"ready","authenticated");
-		if (session && session.user_id) {
-			var notifications = new Notifications.UserNotifications(session.user_id,self);
-			var refresh_count = function() {
-				notifications.get_notifications_count(function(err,nb_notes,nb_unread) {
-					console.log("Notes total, unread:",nb_notes,nb_unread);
-					self.rsr.r_send_user(socket.id,"notes-count",{nb_notes: nb_notes,nb_unread: nb_notes});
-					//socket.emit("notes-count",nb_notes,nb_unread);
-				});
-			};
-			refresh_count();
-			var mark_all_read = function(fetch_notes) {
-				notifications.mark_all_read(function(e,r) {
-					if (fetch_notes) {
-						console.log("get_initial_notes()")
-						notifications.get_notifications(1,20,function(err,notes) {
-							console.log("Received notes!")
-							self.rsr.r_send_user(socket.id,"notes-init",notes);
-						});					
-					}
-					else
-						refresh_count();
-				});
-			};
-			socket.on("get_initial_notes",function() {
-				console.log("mark read()");
-				mark_all_read(true);
-				// notifications.mark_all_read(function(e,r) {
-				// 	console.log("get_initial_notes()")
-				// 	notifications.get_notifications(1,20,function(err,notes) {
-				// 		console.log("Received notes!")
-				// 		self.rsr.r_send_user(socket.id,"notes-init",notes);
-				// 	});					
-				// });
-			});
-			socket.on("mark_notes_read",function() {
-				console.log("mark notes read()");
-				mark_all_read(false);
-				// notifications.mark_all_read();
-			});
-		}
 
-	});
+
+	io.sockets.on('connection', function(socket) {
+		console.log('Connected!', socket.handshake.session);
+		
+		var session = socket.handshake.session;
+		
+		// Bail out if the session is not set for some reason.
+		if (!session || !session.user_id) return;
+		
+		self.rsr.r_send_user(socket.id, "ready", "authenticated");
+		
+		var notifications = new Notifications.UserNotifications(session.user_id, self);
+		
+		var send_notification_count = function() {
+			notifications.get_notifications_count(function(err, nb_notes, nb_unread) {
+				console.log("Notes total, unread:", nb_notes, nb_unread);
+				self.rsr.r_send_user(socket.id, "notes-count", {nb_notes: nb_notes, nb_unread: nb_unread});
+			});
+		};
+		
+		send_notification_count();
+		
+		var mark_all_read = function(callback) {
+			notifications.mark_all_read(callback);
+		};
+		
+		var send_all_notes = function() {
+			console.log("get_initial_notes()")
+			notifications.get_notifications(1, 20, function(err, notes) {
+				console.log("Received notes!")
+				self.rsr.r_send_user(socket.id, "notes-init", notes);
+			});
+		};
+		
+		socket.on("get_initial_notes", function() {
+			console.log("mark read()");
+			mark_all_read();
+			send_all_notes();
+		});
+		
+		socket.on("mark_notes_read", function() {
+			console.log("mark notes read()");
+			mark_all_read(send_notification_count);
+		});
+		
+    });
+
+
+	var auth_options = {
+		rc: rsr.rc,
+		plugin: auth_plugin
+	};
+
 
 	// API views
 	// -----------------------
@@ -92,12 +103,15 @@ function Notify(app, io, options) {
 	app.resource('api/message', Api.MessageApi(this), { format: 'json' });
 	app.resource('api/events', Api.EventsApi(this), { format: 'json' });
 	app.resource('api/event', Api.EventApi(this), { format: 'json' });
+	app.resource('api/session', Api.SessionApi(this), {format: 'json'});
+
 	app.get('/js/live-notify.js', function(req, res){
-	    res.sendfile(__dirname + '/public/js/live-notify.js');
+		res.sendfile(__dirname + '/public/js/live-notify.js');
 	});
+
 	app.get('/models/models.js', function(req, res){
-	    console.log("req.url",req.url)
-	    res.sendfile(__dirname + '/models/models.js');
+		console.log("req.url",req.url)
+		res.sendfile(__dirname + '/models/models.js');
 	});
 
 	//}
