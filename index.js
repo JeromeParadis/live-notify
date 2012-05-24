@@ -101,7 +101,20 @@ function Notify(app, io, options) {
 			mark_all_read(send_notification_count);
 		});
 		
-    });
+	});
+	
+	/**
+	 * ONLY FOR DEV! Purges our keys. Don't call this unless you mean it!
+	 * And comment it out for production.
+	 */
+	app.get('/purge', function(req, res) {
+		rc.keys('*', function(err, keys) {
+			keys.forEach(function(key) {
+				rc.del(key);
+			});
+		});
+		res.send('purged, hope you meant it.');
+	});
 
 
 	// API views
@@ -111,6 +124,8 @@ function Notify(app, io, options) {
 	app.resource('api/events', Api.EventsApi(this), { format: 'json' });
 	app.resource('api/event', Api.EventApi(this), { format: 'json' });
 	app.resource('api/session', Api.SessionApi(this), {format: 'json'});
+	
+	
 
 	app.get('/js/live-notify.js', function(req, res){
 		res.sendfile(__dirname + '/public/js/live-notify.js');
