@@ -46,7 +46,7 @@ var LiveNotify = function(url,sessionid,options) {
     // Initial notes on page load
     // ----------------------------------
     socket.on('notes-count', function (results) {
-        console.log("Count,unread",results.nb_notes,results.nb_unread);
+        console.log("Count,unread", results);//results.nb_notes,results.nb_unread);
         self.notifier.update_count(results.nb_notes,results.nb_unread);
     });
 

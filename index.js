@@ -33,8 +33,21 @@ function Notify(app, io, options) {
 	var auth_plugin = options.auth_plugin || null;
 	this.callback_api = options.callback_api || null;
 	this.transport = new Transport(this);
-	this.socket_auth = new SocketAuth(io, auth_options);
 
+	var auth_options = {
+		rc: rsr.rc,
+		plugin: auth_plugin
+	};
+
+	// ONLY FOR DEV! Purges our keys. Leave this commented out unless you mean it!
+	//~ rc.keys('*', function(err, keys) {
+		//~ keys.forEach(function(key) {
+			//~ rc.del(key);
+		//~ });
+	//~ });
+	
+	
+	this.socket_auth = new SocketAuth(io, auth_options);
 	
 	models.Backbone.setClient(this.rsr.rc);
 	models.Backbone.initServer(app);
@@ -66,11 +79,11 @@ function Notify(app, io, options) {
 		send_notification_count();
 		
 		var mark_all_read = function(callback) {
+			console.log("mark_all_read()");
 			notifications.mark_all_read(callback);
 		};
 		
 		var send_all_notes = function() {
-			console.log("get_initial_notes()")
 			notifications.get_notifications(1, 20, function(err, notes) {
 				console.log("Received notes!")
 				self.rsr.r_send_user(socket.id, "notes-init", notes);
@@ -78,7 +91,7 @@ function Notify(app, io, options) {
 		};
 		
 		socket.on("get_initial_notes", function() {
-			console.log("mark read()");
+			console.log("get_initial_notes()")
 			mark_all_read();
 			send_all_notes();
 		});
@@ -89,12 +102,6 @@ function Notify(app, io, options) {
 		});
 		
     });
-
-
-	var auth_options = {
-		rc: rsr.rc,
-		plugin: auth_plugin
-	};
 
 
 	// API views
