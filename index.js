@@ -29,7 +29,7 @@ function Notify(app, io, options) {
 	if (!options) options = {};
 	this.redis_prefix = options.redis_namespace || '';
 	this.models = models;
-	this.rsr = RedSocket(io, {debug: false, redis_prefix: redis_prefix});
+	this.rsr = RedSocket(io, {debug: true, redis_prefix: redis_prefix});
 	var auth_plugin = options.auth_plugin || null;
 	this.callback_api = options.callback_api || null;
 	this.transport = new Transport(this);
@@ -58,10 +58,9 @@ function Notify(app, io, options) {
 
 
 	io.sockets.on('connection', function(socket) {
-		console.log('Connected!', socket.handshake.session);
+		console.log('Connected!', socket.handshake.sessionID);
 		
 		var session = socket.handshake.session;
-		
 		// Bail out if the session is not set for some reason.
 		if (!session || !session.user_id) return;
 		
@@ -85,7 +84,7 @@ function Notify(app, io, options) {
 		
 		var send_all_notes = function() {
 			notifications.get_notifications(1, 20, function(err, notes) {
-				console.log("Received notes!")
+				console.log("Received notes!", notes)
 				self.rsr.r_send_user(socket.id, "notes-init", notes);
 			});
 		};

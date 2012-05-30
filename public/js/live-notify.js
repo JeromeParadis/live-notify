@@ -41,7 +41,6 @@ var LiveNotify = function(url,sessionid,options) {
         self.notifier = new Notifier();
     });
     
-    
 
     // Initial notes on page load
     // ----------------------------------
@@ -56,7 +55,7 @@ var LiveNotify = function(url,sessionid,options) {
         console.log("Init!");
 
         var nb_notes = (notes && notes.length) || 0;
-        self.notes_summary = new NotificationSummary(notes);
+        self.notes_summary = new NotificationSummary({collection: self.notes_to_event_threads(notes)});
         self.notifier.update_count(self.notifier.nb_notes,0);
     });
 
@@ -82,6 +81,16 @@ var LiveNotify = function(url,sessionid,options) {
     require([this.url + 'models/models.js'],function() {
         //alert(models.Event)
     });
+
+    this.notes_to_event_threads = function(notes) {
+        var threads = [];
+        for (var i=0;i<notes.length;i++) {
+          var note = new models.EventThread({total: notes[i].total, notifications: new models.Events(notes[i].notifications)});
+          //note.mport(notes[i]);
+          threads.push(note);
+        }
+        return new models.EventThreads(threads);
+    };
 
     // Views
     // ----------------------------------
@@ -162,16 +171,17 @@ var LiveNotify = function(url,sessionid,options) {
       className: "notify-summary",
       MAX_NOTES: 20,
       template: $.template("#template-notify-summary"),
-      notifications: [],
+      threads: [],
       events: {
         },
       initialize: function(notes) {
-        for (var i=0;i<notes.length;i++) {
-          var note = new models.Event();
-          note.mport(notes[i]);
-          this.notifications.push(note);
-        }
-        this.notifications = new models.Events(this.notifications);
+        // for (var i=0;i<notes.length;i++) {
+        //   var note = new models.EventThread({total: notes[i].total, notifications: new models.Events(notes[i].notifications)});
+        //   //note.mport(notes[i]);
+        //   this.threads.push(note);
+        // }
+        // this.collection = new models.EventThreads(this.notifications);
+        var message = this.collection.at(0).get_notification();
         $(this.el).html("");
         this.render();
         $(self.wrapper_selector).append(this.el);
@@ -188,7 +198,13 @@ var LiveNotify = function(url,sessionid,options) {
           return this;        
       },
       render: function() {
-        $(this.el).html(this.template({notifications: this.notifications.models}));
+        var messages = [];
+        var threads = this.collection.models;
+        if (threads) {
+          for (var i=0;i<threads.length;i++)
+            messages.push(threads[i].get_notification());          
+        }
+        $(this.el).html(this.template({messages: messages}));
         return this;
       },
       destroy: function() {
