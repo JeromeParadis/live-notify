@@ -17,7 +17,6 @@ var LiveNotify = function(url,sessionid,options) {
     // Socket.io callbacks
     // ----------------------------------
 
-
     // Session authorized
     // ----------------------------------
     //~ socket.on('authorize', function (data) {
@@ -43,6 +42,11 @@ var LiveNotify = function(url,sessionid,options) {
     
     
 
+    socket.on('request_session_id', function(data) {
+        socket.emit('session', {sessionid: self.sessionid});
+    });
+    
+    
     // Initial notes on page load
     // ----------------------------------
     socket.on('notes-count', function (results) {

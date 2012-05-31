@@ -47,61 +47,78 @@ function Notify(app, io, options) {
 	//~ });
 	
 	
-	this.socket_auth = new SocketAuth(io, auth_options);
-	
 	models.Backbone.setClient(this.rsr.rc);
 	models.Backbone.initServer(app);
 
 	// Define auth acknowledge
 	// -----------------------
+	
+	/**
+	 * 
+	 * The following might be better structured as a seperate class.
+	 * 
+	 */
+	 
 	var self = this;
-
-
+	var _socket = null;
+	var _notifications = null;
+	
 	io.sockets.on('connection', function(socket) {
 		console.log('Connected!', socket.handshake.session);
+		_socket = socket;
+		if (socket.handshake.session) onSessionLoaded(null, socket.handshake.session);
+	});
+	
+	
+	var onSessionLoaded = function(err, session) {
+		console.log('onSessionLoaded()', session);
 		
-		var session = socket.handshake.session;
+		// Bail out if the session is not set or the connection is not
+		// initialized yet.
+		if (!session || !_socket) return;
 		
-		// Bail out if the session is not set for some reason.
-		if (!session || !session.user_id) return;
-		
-		self.rsr.r_send_user(socket.id, "ready", "authenticated");
-		
-		var notifications = new Notifications.UserNotifications(session.user_id, self);
-		
-		var send_notification_count = function() {
-			notifications.get_notifications_count(function(err, nb_notes, nb_unread) {
-				console.log("Notes total, unread:", nb_notes, nb_unread);
-				self.rsr.r_send_user(socket.id, "notes-count", {nb_notes: nb_notes, nb_unread: nb_unread});
-			});
-		};
-		
-		send_notification_count();
-		
-		var mark_all_read = function(callback) {
-			console.log("mark_all_read()");
-			notifications.mark_all_read(callback);
-		};
-		
-		var send_all_notes = function() {
-			notifications.get_notifications(1, 20, function(err, notes) {
-				console.log("Received notes!")
-				self.rsr.r_send_user(socket.id, "notes-init", notes);
-			});
-		};
-		
-		socket.on("get_initial_notes", function() {
+		_socket.on("get_initial_notes", function() {
 			console.log("get_initial_notes()")
 			mark_all_read();
 			send_all_notes();
 		});
 		
-		socket.on("mark_notes_read", function() {
+		_socket.on("mark_notes_read", function() {
 			console.log("mark notes read()");
 			mark_all_read(send_notification_count);
 		});
 		
-	});
+		//~ self.rsr.r_send_user(socket.id, "ready", "authenticated");
+		_notifications = new Notifications.UserNotifications(session.user_id, self);
+		send_notification_count();
+	};
+	
+	
+	var send_notification_count = function() {
+		_notifications.get_notifications_count(function(err, nb_notes, nb_unread) {
+			console.log("Notes total, unread:", nb_notes, nb_unread);
+			self.rsr.r_send_user(_socket.id, "notes-count", {nb_notes: nb_notes, nb_unread: nb_unread});
+		});
+	};
+	
+	
+	var mark_all_read = function(callback) {
+		console.log("mark_all_read()");
+		_notifications.mark_all_read(callback);
+	};
+	
+	
+	var send_all_notes = function() {
+		_notifications.get_notifications(1, 20, function(err, notes) {
+			console.log("Received notes!")
+			self.rsr.r_send_user(_socket.id, "notes-init", notes);
+		});
+	};
+	
+	
+	
+	this.socket_auth = new SocketAuth(io, auth_options, onSessionLoaded);
+	
 	
 	/**
 	 * ONLY FOR DEV! Purges our keys. Don't call this unless you mean it!
