@@ -76,7 +76,7 @@ var LiveNotify = function(url,sessionid,options) {
 
         self.notifier.increase_count();
         if (self.notes_summary) {
-            self.notes_summary.add_note();
+            self.notes_summary.add_note(data);
         }
     });
 
@@ -89,11 +89,16 @@ var LiveNotify = function(url,sessionid,options) {
     this.notes_to_event_threads = function(notes) {
         var threads = [];
         for (var i=0;i<notes.length;i++) {
-          var note = new models.EventThread({total: notes[i].total, notifications: new models.Events(notes[i].notifications)});
+          var note = new models.EventThread({ id: notes[i].id,
+                                              total: notes[i].total,
+                                              notifications: new models.Events(notes[i].notifications)
+                                            });
           //note.mport(notes[i]);
           threads.push(note);
         }
-        return new models.EventThreads(threads);
+        return new models.EventThreads(threads,{comparator: function(thread) {
+                return - new Date(thread.get('notifications').at(0).get('created')).getTime();
+                }});
     };
 
     // Views
@@ -195,8 +200,22 @@ var LiveNotify = function(url,sessionid,options) {
       },
       add_note: function(notification) {
           var note = new models.Event(notification);
-          // note.mport(notification);
-          this.notifications.add(note,{at: 0});
+          if (notification.group_by in this.collection._byId) {
+              var thread = this.collection._byId[notification.group_by];
+              thread.set({
+                total: thread.get('total') + 1,
+              });
+              thread.get('notifications').add(note,{at: 0});
+              this.collection.sort();
+          }
+          else {
+            var thread = new models.EventThread({ id: note.id,
+                                              total: 1,
+                                              notifications: new models.Events([note]),
+                                            });
+            this.collection.add(thread,{at: 0});
+          }
+          
           this.render();
 
           return this;        

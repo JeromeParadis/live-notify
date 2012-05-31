@@ -128,7 +128,10 @@
     });
 
     models.EventThreads = Backbone.Collection.extend({
-        model: models.EventThread
+        model: models.EventThread,
+        // intitalize: function(models, options) {
+        //     this.comparator = ;
+        // }
     });
 
 
