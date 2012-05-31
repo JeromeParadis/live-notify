@@ -77,7 +77,7 @@ function Notify(app, io, options) {
 		var notifications = null;
 		
 		var init = function() {
-			SocketAuth(socket, auth_options);
+			SocketAuth(socket, auth_options, onSessionLoaded);
 			if (socket.handshake.session) onSessionLoaded(null, socket.handshake.session)	;
 		}
 		
