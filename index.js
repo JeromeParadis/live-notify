@@ -29,7 +29,7 @@ function Notify(app, io, options) {
 	if (!options) options = {};
 	this.redis_prefix = options.redis_namespace || '';
 	this.models = models;
-	this.rsr = RedSocket(io, {debug: false, redis_prefix: redis_prefix});
+	this.rsr = RedSocket(io, {debug: true, redis_prefix: redis_prefix});
 	var auth_plugin = options.auth_plugin || null;
 	this.callback_api = options.callback_api || null;
 	this.transport = new Transport(this);
