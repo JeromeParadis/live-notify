@@ -90,11 +90,16 @@ function Notify(app, io, options) {
 			if (!session || !socket) return;
 			
 			socket.on("get_initial_notes", function() {
-				console.log("get_initial_notes()")
+				console.log("get_initial_notes()");
 				mark_all_read();
-				send_all_notes();
+				send_all_notes(true);
 			});
-			
+
+			socket.on("get_notes", function() {
+				console.log("get_notes()");
+				send_all_notes(false);
+			});
+
 			socket.on("mark_notes_read", function() {
 				console.log("mark notes read()");
 				mark_all_read(send_notification_count);
@@ -120,10 +125,11 @@ function Notify(app, io, options) {
 		};
 		
 		
-		var send_all_notes = function() {
+		var send_all_notes = function(init) {
+			var initial = init || false;
 			notifications.get_notifications(1, 20, function(err, notes) {
 				console.log("Received notes!")
-				notify.rsr.r_send_user(socket.id, "notes-init", notes);
+				notify.rsr.r_send_user(socket.id, (initial) ? "notes-init" : "notes-received", notes);
 			});
 		};
 		

@@ -5,6 +5,10 @@ var LiveNotify = function(url,sessionid,options) {
     this.icon_selector = (options && options.icon_selector) || '#notify-icon';
     this.notifier = null;
     this.notes_summary = null;
+    this.notes_collection = null;
+    this.notes_all = null;
+    this.notes_browser = null;
+    this.browser_instance = 0;
     var self = this;
 
     if (!sessionid) {
@@ -38,6 +42,9 @@ var LiveNotify = function(url,sessionid,options) {
         // Send the session info.
         //socket.emit('auth', { sessionid: self.sessionid });
         self.notifier = new Notifier();
+        if ($('.notify-item-list').length > 0) {
+          socket.emit('get_notes');
+        }
     });
     
 
@@ -59,8 +66,19 @@ var LiveNotify = function(url,sessionid,options) {
         console.log("Init!");
 
         var nb_notes = (notes && notes.length) || 0;
-        self.notes_summary = new NotificationSummary({collection: self.notes_to_event_threads(notes)});
+        self.notes_collection = self.notes_to_event_threads(notes);
+        self.notes_summary = new NotificationSummary({collection: self.notes_collection});
         self.notifier.update_count(self.notifier.nb_notes,0);
+    });
+
+    // Initial notes on page load
+    // ----------------------------------
+    socket.on('notes-received', function (notes) {
+        console.log("Received!");
+
+        var nb_notes = (notes && notes.length) || 0;
+        self.notes_all = self.notes_to_event_threads(notes);
+        self.notes_browser = new NotificationBrowser({collection: self.notes_all});
     });
 
     // Direct message
@@ -103,6 +121,34 @@ var LiveNotify = function(url,sessionid,options) {
 
     // Views
     // ----------------------------------
+    NotificationItem = Backbone.View.extend({
+      tagName: "li",
+      className: "notify-note-item",
+      template: $.template("#template-notify-note-item"),
+      events: {
+        },
+      initialize: function(notes) {
+        $(this.el).html("");
+        this.render();
+        console.log("NotificationItem View initialized");
+      },
+      render: function() {
+        console.log(this.model);
+        // $(this.el).html(this.template({
+        //   message: this.model.get_notification(),
+        // }));
+        $(this.el).html(this.model.get_notification());
+        return this;
+      },
+      destroy: function() {
+        // this.notifications.reset();
+        // this.notifications = null;
+        // this.remove();
+      }
+
+    });
+
+
 
     // Notifier View
     // ----------------------------------
@@ -173,6 +219,49 @@ var LiveNotify = function(url,sessionid,options) {
       }
     });
 
+    // Browser View
+    // ----------------------------------
+    NotificationBrowser = Backbone.View.extend({
+      tagName: "ul",
+      parentSelector: ".notify-browser",
+      className: "notify-item-list",
+      NOTES_PER_PAGE: 20,
+      page: 1,
+      events: {
+        },
+      initialize: function(notes) {
+        self.browser_instance += 1;
+        this.browser_instance= self.browser_instance;
+        $(this.el).html("");
+        this.render();
+        $(this.parentSelector).html(this.el);
+        console.log("Browser View initialized");
+      },
+      get_thread_view_id: function(thread) {
+        return 'notify-item-' + this.browser_instance + '-' + thread.id
+      },
+      render: function() {
+        var threads = this.collection.models;
+        if (threads) {
+          for (var i=0;i<threads.length;i++) {
+            var item = new NotificationItem({
+              model: threads[i],
+              id: this.get_thread_view_id(threads[i])
+              });
+            $(this.el).prepend($(item.el));
+          }
+        }
+        return this;
+      },
+      destroy: function() {
+        this.notifications.reset();
+        this.notifications = null;
+        this.remove();
+      }
+      
+    });
+
+
     // Notifier View
     // ----------------------------------
     NotificationSummary = Backbone.View.extend({
@@ -194,8 +283,8 @@ var LiveNotify = function(url,sessionid,options) {
         $(this.el).html("");
         this.render();
         $(self.wrapper_selector).append(this.el);
-        $(self.icon_selector).removeAttr("disabled").removeClass("s-disabled"); 
-        $(self.icon_selector).removeClass("button-red");
+        //$(self.icon_selector).removeAttr("disabled").removeClass("s-disabled"); 
+        // $(self.icon_selector).removeClass("button-red");
         console.log("View initialized");
       },
       add_note: function(notification) {
@@ -224,8 +313,9 @@ var LiveNotify = function(url,sessionid,options) {
         var messages = [];
         var threads = this.collection.models;
         if (threads) {
-          for (var i=0;i<threads.length;i++)
-            messages.push(threads[i].get_notification());          
+          for (var i=0;i<threads.length;i++) {
+            messages.push(threads[i].get_notification());
+          }
         }
         $(this.el).html(this.template({messages: messages}));
         return this;
