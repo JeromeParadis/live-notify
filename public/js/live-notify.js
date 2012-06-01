@@ -9,6 +9,8 @@ var LiveNotify = function(url,sessionid,options) {
     this.notes_all = null;
     this.notes_browser = null;
     this.browser_instance = 0;
+    this.notes_per_page = (options && options.notes_per_page) || 20;
+    this.notes_per_summary_page = (options && options.notes_per_summary_page) || 10;
     var self = this;
 
     if (!sessionid) {
@@ -43,7 +45,7 @@ var LiveNotify = function(url,sessionid,options) {
         //socket.emit('auth', { sessionid: self.sessionid });
         self.notifier = new Notifier();
         if ($('.notify-item-list').length > 0) {
-          socket.emit('get_notes');
+          socket.emit('get_notes',{page: 1, items_per_page: self.notes_per_page });
         }
     });
     
@@ -62,23 +64,28 @@ var LiveNotify = function(url,sessionid,options) {
 
     // Initial notes on page load
     // ----------------------------------
-    socket.on('notes-init', function (notes) {
+    socket.on('notes-init', function (data) {
         console.log("Init!");
 
-        var nb_notes = (notes && notes.length) || 0;
-        self.notes_collection = self.notes_to_event_threads(notes);
-        self.notes_summary = new NotificationSummary({collection: self.notes_collection});
+        var nb_notes = (data && data.notes && data.notes.length) || 0;
+        self.add_notes(data.notes);
+        self.notes_summary = new NotificationSummary({collection: self.notes_all});
         self.notifier.update_count(self.notifier.nb_notes,0);
     });
 
     // Initial notes on page load
     // ----------------------------------
-    socket.on('notes-received', function (notes) {
+    socket.on('notes-received', function (data) {
         console.log("Received!");
 
-        var nb_notes = (notes && notes.length) || 0;
-        self.notes_all = self.notes_to_event_threads(notes);
-        self.notes_browser = new NotificationBrowser({collection: self.notes_all});
+        var nb_notes = data.nb_notes;
+        self.add_notes(data.notes);
+        if (!data.ref) {
+          self.notes_browser = new NotificationBrowser({collection: self.notes_all, nb_total: data.nb_total});
+          }
+        else {
+          self.notes_browser.show_next_notes(data);
+        }
     });
 
     // Direct message
@@ -104,19 +111,38 @@ var LiveNotify = function(url,sessionid,options) {
         //alert(models.Event)
     });
 
+    this.add_notes = function(notes) {
+        if (self.notes_all) {
+          for (var i=0;i<notes.length;i++) {
+            if (!(notes[i].id in this.notes_all._byId)) {
+              var note = self.note_to_event_thread(notes[i]);
+              self.notes_all.add(note)
+              }
+          }
+        }
+        else
+          self.notes_all = self.notes_to_event_threads(notes); 
+    };
+
+
     this.notes_to_event_threads = function(notes) {
         var threads = [];
         for (var i=0;i<notes.length;i++) {
-          var note = new models.EventThread({ id: notes[i].id,
-                                              total: notes[i].total,
-                                              notifications: new models.Events(notes[i].notifications)
-                                            });
-          //note.mport(notes[i]);
+
+          var note = self.note_to_event_thread(notes[i]);
           threads.push(note);
         }
         return new models.EventThreads(threads,{comparator: function(thread) {
                 return - new Date(thread.get('notifications').at(0).get('created')).getTime();
                 }});
+    };
+
+    this.note_to_event_thread = function(note) {
+          return new models.EventThread({
+            id: note.id,
+            total: note.total,
+            notifications: new models.Events(note.notifications)
+          });
     };
 
     // Views
@@ -147,7 +173,6 @@ var LiveNotify = function(url,sessionid,options) {
       }
 
     });
-
 
 
     // Notifier View
@@ -196,7 +221,13 @@ var LiveNotify = function(url,sessionid,options) {
             this.update_count(self.notifier.nb_notes,0);
           }
         } else {
-          socket.emit('get_initial_notes');
+          if (self.notes_all){
+            self.notes_summary = new NotificationSummary({collection: self.notes_all});
+            socket.emit('mark_notes_read');
+            this.update_count(this.nb_notes,0);
+            }
+          else
+            socket.emit('get_initial_notes',{page: 1, items_per_page: self.notes_per_summary_page });
         }
         return this;
       },
@@ -225,31 +256,71 @@ var LiveNotify = function(url,sessionid,options) {
       tagName: "ul",
       parentSelector: ".notify-browser",
       className: "notify-item-list",
-      NOTES_PER_PAGE: 20,
       page: 1,
+      nb_displayed: 0,
       events: {
+        "click .notify-note-item.show-more":      "show_more",
         },
-      initialize: function(notes) {
+      initialize: function(options) {
         self.browser_instance += 1;
         this.browser_instance= self.browser_instance;
+        this.nb_total = (options && options.nb_total) || 0;
         $(this.el).html("");
         this.render();
         $(this.parentSelector).html(this.el);
         console.log("Browser View initialized");
       },
-      get_thread_view_id: function(thread) {
-        return 'notify-item-' + this.browser_instance + '-' + thread.id
+      get_thread_view_id: function(thread_id) {
+        return 'notify-item-' + this.browser_instance + '-' + thread_id
       },
       render: function() {
-        var threads = this.collection.models;
+        this.show_threads(this.collection.models)
+        return this;
+      },
+      show_threads: function(threads) {
         if (threads) {
+          $('.notify-note-item.show-more').remove();
           for (var i=0;i<threads.length;i++) {
-            var item = new NotificationItem({
-              model: threads[i],
-              id: this.get_thread_view_id(threads[i])
-              });
-            $(this.el).prepend($(item.el));
+            this.show_thread(threads[i]);
           }
+          this.insert_show_more();
+        }
+        return this;
+      },
+      insert_show_more: function() {
+        if (this.collection.models.length < this.nb_total) {
+          $(this.el).append('<li class="notify-note-item show-more"><a>Show more notifications</a></li>')
+        }        
+      },
+      show_thread: function (thread) {
+        var item = new NotificationItem({
+          model: thread,
+          id: this.get_thread_view_id(thread.id)
+          });
+        $(this.el).append($(item.el));
+        this.nb_displayed += 1;
+
+        return this;
+      },
+      show_more: function() {
+        this.page += 1;
+        socket.emit('get_notes',{
+          page: this.page,
+          items_per_page: self.notes_per_page,
+          ref: this.browser_instance,
+        });
+        return this;
+      },
+      show_next_notes: function(data) {
+        console.log(data);
+        if (data.notes) {
+          this.nb_total = data.nb_total;
+          $('.notify-note-item.show-more').remove();
+          var start_at = this.nb_displayed + 1;
+          for(var i=start_at; i< (this.page * self.notes_per_page) && i < this.collection.models.length; i++) {
+            this.show_thread(this.collection.models[i]);
+          }
+          this.insert_show_more();
         }
         return this;
       },
@@ -267,7 +338,7 @@ var LiveNotify = function(url,sessionid,options) {
     NotificationSummary = Backbone.View.extend({
       tagName: "div",
       className: "notify-summary",
-      MAX_NOTES: 20,
+      MAX_NOTES: 10,
       template: $.template("#template-notify-summary"),
       threads: [],
       events: {
@@ -313,7 +384,7 @@ var LiveNotify = function(url,sessionid,options) {
         var messages = [];
         var threads = this.collection.models;
         if (threads) {
-          for (var i=0;i<threads.length;i++) {
+          for (var i=0;i<threads.length && i< this.MAX_NOTES;i++) {
             messages.push(threads[i].get_notification());
           }
         }

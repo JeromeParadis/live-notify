@@ -89,15 +89,15 @@ function Notify(app, io, options) {
 			// initialized yet.
 			if (!session || !socket) return;
 			
-			socket.on("get_initial_notes", function() {
+			socket.on("get_initial_notes", function(options) {
 				console.log("get_initial_notes()");
 				mark_all_read();
-				send_all_notes(true);
+				send_all_notes(true, options);
 			});
 
-			socket.on("get_notes", function() {
-				console.log("get_notes()");
-				send_all_notes(false);
+			socket.on("get_notes", function(options) {
+				console.log('get_notes()', options);
+				send_all_notes(false, options);
 			});
 
 			socket.on("mark_notes_read", function() {
@@ -114,7 +114,10 @@ function Notify(app, io, options) {
 		var send_notification_count = function() {
 			notifications.get_notifications_count(function(err, nb_notes, nb_unread) {
 				console.log("Notes total, unread:", nb_notes, nb_unread);
-				notify.rsr.r_send_user(socket.id, "notes-count", {nb_notes: nb_notes, nb_unread: nb_unread});
+				notify.rsr.r_send_user(socket.id, "notes-count", {
+					nb_notes: nb_notes,
+					nb_unread: nb_unread
+					});
 			});
 		};
 		
@@ -125,11 +128,21 @@ function Notify(app, io, options) {
 		};
 		
 		
-		var send_all_notes = function(init) {
+		var send_all_notes = function(init, options) {
 			var initial = init || false;
-			notifications.get_notifications(1, 20, function(err, notes) {
-				console.log("Received notes!")
-				notify.rsr.r_send_user(socket.id, (initial) ? "notes-init" : "notes-received", notes);
+			var page = (options && options.page) || 1;
+			var items_per_page = (options && options.items_per_page) || 10;
+			notifications.get_notifications(page, items_per_page, function(err, data) {
+				console.log("Received notes!",data)
+				notify.rsr.r_send_user(socket.id, (initial) ? "notes-init" : "notes-received", {
+					notes: data.threads,
+					nb_total: data.nb_total,
+					nb_read: data.nb_read,
+					nb_notes: data.threads.length,
+					page: page,
+					items_per_page: items_per_page,
+					ref: (options && options.ref) || null,
+				});
 			});
 		};
 		
