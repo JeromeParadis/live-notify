@@ -163,7 +163,10 @@ var LiveNotify = function(url,sessionid,options) {
         // $(this.el).html(this.template({
         //   message: this.model.get_notification(),
         // }));
-        $(this.el).html(this.model.get_notification());
+        $(this.el).html(this.template({
+          message: this.model.get_notification(),
+          date: new Date(this.model.get('notifications').at(0).get('created')),
+        }));
         return this;
       },
       destroy: function() {
