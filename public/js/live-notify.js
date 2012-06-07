@@ -1,6 +1,6 @@
 var LiveNotify = function(url,sessionid,options) {
     this.url = url;
-    this.sessionid = sessionid;
+    this.sessionid = sessionid || null;
     this.wrapper_selector = (options && options.wrapper_selector) || '#notify-wrapper';
     this.icon_selector = (options && options.icon_selector) || '#notify-icon';
     this.notifier = null;
@@ -44,16 +44,18 @@ var LiveNotify = function(url,sessionid,options) {
         // Send the session info.
         //socket.emit('auth', { sessionid: self.sessionid });
         self.notifier = new Notifier();
-        if ($('.notify-item-list').length > 0) {
-          socket.emit('get_notes',{page: 1, items_per_page: self.notes_per_page });
-        }
     });
     
 
     socket.on('request_session_id', function(data) {
         socket.emit('session', {sessionid: self.sessionid});
     });
-    
+
+    socket.on('session_auth', function(data) {
+        if ($('.notify-item-list').length > 0) {
+          socket.emit('get_notes',{page: 1, items_per_page: self.notes_per_page });
+        }
+    });
     
     // Initial notes on page load
     // ----------------------------------
