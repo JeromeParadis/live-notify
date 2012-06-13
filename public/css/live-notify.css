@@ -1,0 +1,48 @@
+.notify-notifier {
+  z-index: 2;
+  float: left; }
+
+.notify-summary, .notify-browser {
+  -moz-border-radius-bottomleft: 4px;
+  -webkit-border-bottom-left-radius: 4px;
+  -o-border-bottom-left-radius: 4px;
+  -ms-border-bottom-left-radius: 4px;
+  -khtml-border-bottom-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+  -moz-border-radius-bottomright: 4px;
+  -webkit-border-bottom-right-radius: 4px;
+  -o-border-bottom-right-radius: 4px;
+  -ms-border-bottom-right-radius: 4px;
+  -khtml-border-bottom-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+  display: block;
+  background-color: white;
+  color: black; }
+
+.notify-summary {
+  width: 480px;
+  position: fixed;
+  margin-left: 25px;
+  float: left; }
+
+.notify-browser {
+  width: 100%; }
+
+.notify-summary ul, .notify-browser ul {
+  display: block;
+  padding: 2px;
+  list-style: none; }
+  .notify-summary ul li, .notify-browser ul li {
+    padding: 5px 0 5px 0; }
+    .notify-summary ul li.notify-summary-item, .notify-browser ul li.notify-summary-item {
+      border: 1px solid lightGray; }
+    .notify-summary ul li.notify-note-item, .notify-browser ul li.notify-note-item {
+      border-top: 1px solid lightGray; }
+      .notify-summary ul li.notify-note-item .notify-note-item-date, .notify-browser ul li.notify-note-item .notify-note-item-date {
+        color: lightGray; }
+    .notify-summary ul li a, .notify-browser ul li a {
+      color: SlateGrey;
+      display: inline;
+      padding: none;
+      text-decoration: underline;
+      padding: 0; }
