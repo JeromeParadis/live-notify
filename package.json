@@ -1,9 +1,9 @@
 {
     "name": "live-notify"
-  , "version": "0.0.4"
+  , "version": "0.0.5"
   , "description": "Adds live notifications to web sites"
-  , "homepage": "https://github.com/JeromeParadis/node-live-notify"
-  , "keywords": ["notifications", "socket.io", "live"]
+  , "homepage": "https://github.com/JeromeParadis/live-notify"
+  , "keywords": ["notifications", "socket.io", "live", "real-time"]
   , "author": "Jerome Paradis <jerome@buyosphere.com>"
   , "contributors": [
         { "name": "Rob Linton", "email": "rob@buyosphere.com" }
