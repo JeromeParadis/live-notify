@@ -181,6 +181,10 @@ function Notify(app, io, options) {
 		res.sendfile(__dirname + '/public/js/live-notify.js');
 	});
 
+	app.get('/css/live-notify.css', function(req, res){
+		res.sendfile(__dirname + '/public/css/live-notify.css');
+	});
+
 	app.get('/models/models.js', function(req, res){
 		console.log("req.url",req.url)
 		res.sendfile(__dirname + '/models/models.js');

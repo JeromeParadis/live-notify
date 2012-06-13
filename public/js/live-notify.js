@@ -3,6 +3,7 @@ var LiveNotify = function(url,sessionid,options) {
     this.sessionid = sessionid || null;
     this.wrapper_selector = (options && options.wrapper_selector) || '#notify-wrapper';
     this.icon_selector = (options && options.icon_selector) || '#notify-icon';
+    this.include_css = (options && options.include_css) || true;
     this.notifier = null;
     this.notes_summary = null;
     this.notes_collection = null;
@@ -12,6 +13,30 @@ var LiveNotify = function(url,sessionid,options) {
     this.notes_per_page = (options && options.notes_per_page) || 20;
     this.notes_per_summary_page = (options && options.notes_per_summary_page) || 10;
     var self = this;
+
+    var createEl = function(tag, attrs) {
+      var el, key, value;
+      el = document.createElement(tag);
+      for (key in attrs) {
+        value = attrs[key];
+        el[key] = value;
+      }
+      return el;
+    };
+
+    // Add Default CSS
+    if (self.include_css) {
+      // var protocol = (('https:' == document.location.protocol) ? 'https://' : 'http://');
+      var d = document.documentElement;
+      var css = createEl('link', {
+        rel: 'stylesheet',
+        href: self.url + 'css/live-notify.css',
+        type: 'text/css',
+        media: 'all'
+      })
+      css.onload = function() { return true; };
+      d.appendChild(css);
+    }
 
     if (!sessionid) {
         return this;
