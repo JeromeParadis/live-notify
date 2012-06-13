@@ -269,10 +269,10 @@ var LiveNotify = function(url,sessionid,options) {
       render_count: function() {
         if (this.nb_unread_notes > 0)  {
           $(this.icon_selector).val(this.nb_unread_notes); 
-          $(this.icon_selector).addClass("button-red");
+          $(this.icon_selector).addClass("notify-icon-active");
        }
         else {
-          $(this.icon_selector).removeClass("button-red");
+          $(this.icon_selector).removeClass("notify-icon-active");
           $(this.icon_selector).val('!'); 
         }
 

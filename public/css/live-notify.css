@@ -1,5 +1,4 @@
 .notify-notifier {
-  z-index: 2;
   float: left; }
 
 .notify-summary, .notify-browser {
@@ -23,6 +22,7 @@
   width: 480px;
   position: fixed;
   margin-left: 25px;
+  z-index: 1000;
   float: left; }
 
 .notify-browser {
@@ -46,3 +46,39 @@
       padding: none;
       text-decoration: underline;
       padding: 0; }
+
+input[type="button"].notify-icon {
+  -moz-border-radius: 20px;
+  -webkit-border-radius: 20px;
+  -o-border-radius: 20px;
+  -ms-border-radius: 20px;
+  -khtml-border-radius: 20px;
+  border-radius: 20px;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  box-sizing: border-box;
+  background: black;
+  border: none;
+  color: #FFF;
+  cursor: pointer;
+  line-height: 24px;
+  text-align: center;
+  display: inline-block;
+  padding: 0 6px;
+  width: auto;
+  height: 24px; }
+  input[type="submit"]:hover, {
+    -moz-box-shadow: 0px 1px 3px rgba(0, 0, 0, 0);
+    -webkit-box-shadow: 0px 1px 3px rgba(0, 0, 0, 0);
+    -o-box-shadow: 0px 1px 3px rgba(0, 0, 0, 0);
+    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0);
+    background-position: 0 -25px;
+    color: #FFF;
+    text-decoration: none;
+}
+
+input[type="button"].notify-icon-active {
+    background: none repeat scroll 0 0 #990000;
+    color: white;
+}
