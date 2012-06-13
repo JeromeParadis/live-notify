@@ -150,22 +150,6 @@ function Notify(app, io, options) {
 		init();
 		
 	};
-	
-	
-	
-	/**
-	 * ONLY FOR DEV! Purges our keys. Don't call this unless you mean it!
-	 * And comment it out for production.
-	 */
-	app.get('/purge', function(req, res) {
-		rc.keys('*', function(err, keys) {
-			keys.forEach(function(key) {
-				rc.del(key);
-			});
-		});
-		res.send('purged, hope you meant it.');
-	});
-
 
 	// API views
 	// -----------------------
