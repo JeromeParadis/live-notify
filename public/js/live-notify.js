@@ -390,7 +390,7 @@ var LiveNotify = function(url,sessionid,options) {
         //   this.threads.push(note);
         // }
         // this.collection = new models.EventThreads(this.notifications);
-        var message = this.collection.at(0).get_notification();
+        
         $(this.el).html("");
         this.render();
         $(self.wrapper_selector).append(this.el);
