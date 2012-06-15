@@ -4,6 +4,7 @@ var LiveNotify = function(url,sessionid,options) {
     this.wrapper_selector = (options && options.wrapper_selector) || '#notify-wrapper';
     this.icon_selector = (options && options.icon_selector) || '#notify-icon';
     this.include_css = (options && options.include_css) || true;
+    this.custom_css_include = (options && options.custom_css_include) || true;
     this.notifier = null;
     this.notes_summary = null;
     this.notes_collection = null;
@@ -36,6 +37,15 @@ var LiveNotify = function(url,sessionid,options) {
       })
       css.onload = function() { return true; };
       d.appendChild(css);
+      if (self.custom_css_include) {
+        var css = createEl('link', {
+          rel: 'stylesheet',
+          href: self.url + 'css/notify.css',
+          type: 'text/css',
+          media: 'all'
+        })
+        d.appendChild(css);        
+      }
     }
 
     if (!sessionid) {

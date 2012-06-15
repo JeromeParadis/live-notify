@@ -1,3 +1,4 @@
+
 .notify-notifier {
   float: left; }
 
@@ -22,8 +23,7 @@
   width: 480px;
   position: fixed;
   margin-left: 25px;
-  z-index: 1000;
-  float: left; }
+  z-index: 1000; }
 
 .notify-browser {
   width: 100%; }
@@ -81,4 +81,8 @@ input[type="button"].notify-icon {
 input[type="button"].notify-icon-active {
     background: none repeat scroll 0 0 #990000;
     color: white;
+}
+
+.notify-more {
+  text-align: center;
 }

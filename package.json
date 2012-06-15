@@ -1,6 +1,6 @@
 {
     "name": "live-notify"
-  , "version": "0.0.8"
+  , "version": "0.0.9"
   , "description": "Adds live notifications to web sites"
   , "homepage": "https://github.com/JeromeParadis/live-notify"
   , "keywords": ["notifications", "socket.io", "live", "real-time"]
