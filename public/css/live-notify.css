@@ -58,7 +58,7 @@ input[type="button"].notify-icon {
   -webkit-box-sizing: border-box;
   -ms-box-sizing: border-box;
   box-sizing: border-box;
-  background: black;
+  background-color: #cccccc;
   border: none;
   color: #FFF;
   cursor: pointer;
@@ -81,6 +81,12 @@ input[type="button"].notify-icon {
 input[type="button"].notify-icon-active {
     background: none repeat scroll 0 0 #990000;
     color: white;
+}
+
+input[type="button"].notify-icon-disabled {
+    background: none repeat scroll 0 0 #eeeeee;
+    color: white;
+    cursor: default;
 }
 
 .notify-more {

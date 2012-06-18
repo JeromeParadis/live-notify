@@ -253,21 +253,23 @@ var LiveNotify = function(url,sessionid,options) {
       },
       click_expand: function() {
         console.log("click");
-        if (self.notes_summary) {
-          $(self.notes_summary.el).toggle();
-          if (!($(self.notes_summary.el).is(':visible')) && this.nb_unread_notes > 0) {
-            // Mark as read
-            socket.emit('mark_notes_read');
-            this.update_count(self.notifier.nb_notes,0);
-          }
-        } else {
-          if (self.notes_all){
-            self.notes_summary = new NotificationSummary({collection: self.notes_all});
-            socket.emit('mark_notes_read');
-            this.update_count(this.nb_notes,0);
+        if (this.nb_notes > 0) {
+          if (self.notes_summary) {
+            $(self.notes_summary.el).toggle();
+            if (!($(self.notes_summary.el).is(':visible')) && this.nb_unread_notes > 0) {
+              // Mark as read
+              socket.emit('mark_notes_read');
+              this.update_count(self.notifier.nb_notes,0);
             }
-          else
-            socket.emit('get_initial_notes',{page: 1, items_per_page: self.notes_per_summary_page });
+          } else {
+            if (self.notes_all){
+              self.notes_summary = new NotificationSummary({collection: self.notes_all});
+              socket.emit('mark_notes_read');
+              this.update_count(this.nb_notes,0);
+              }
+            else
+              socket.emit('get_initial_notes',{page: 1, items_per_page: self.notes_per_summary_page });
+          }          
         }
         return this;
       },
@@ -277,13 +279,16 @@ var LiveNotify = function(url,sessionid,options) {
         return this;
       },
       render_count: function() {
+        $(this.icon_selector).removeClass("notify-icon-active");
+        $(this.icon_selector).removeClass("notify-icon-disabled");
         if (this.nb_unread_notes > 0)  {
           $(this.icon_selector).val(this.nb_unread_notes); 
           $(this.icon_selector).addClass("notify-icon-active");
        }
         else {
-          $(this.icon_selector).removeClass("notify-icon-active");
-          $(this.icon_selector).val('!'); 
+          $(this.icon_selector).val('0');
+          if (this.nb_notes == 0)
+            $(this.icon_selector).addClass("notify-icon-disabled");
         }
 
         return this;
