@@ -314,7 +314,11 @@ var LiveNotify = function(url,sessionid,options) {
         return 'notify-item-' + this.browser_instance + '-' + thread_id
       },
       render: function() {
-        this.show_threads(this.collection.models)
+        if (this.collection && this.collection.models && this.collection.models.length > 0)
+          this.show_threads(this.collection.models);
+        else {
+          $(this.el).html('<li class="notify-note-item notify-note-empty">Sorry. You have no notification.</li>')
+        }
         return this;
       },
       show_threads: function(threads) {
