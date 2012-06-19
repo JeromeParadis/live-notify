@@ -34,7 +34,7 @@
   list-style: none; }
   .notify-summary ul li, .notify-browser ul li {
     padding: 5px 0 5px 0; }
-    .notify-summary ul li.notify-summary-item, .notify-browser ul li.notify-summary-item {
+    .notify-summary ul li.notify-summary-item, .notify-summary ul li.notify-more, .notify-browser ul li.notify-summary-item {
       border: 1px solid lightGray; }
     .notify-summary ul li.notify-note-item, .notify-browser ul li.notify-note-item {
       border-top: 1px solid lightGray; }
