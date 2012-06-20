@@ -87,6 +87,8 @@
                         message = message.replace('{{' + obj_name + '}}', '<a href="' + objects[obj_name].url + '">' + objects[obj_name].name + '</a>')
                     }
                 }
+                var avatar = null;
+                var avatar_url = null;
                 if (actors.length > 0)  {
                     var actor_no = 1;
                     var actor_text = ''
@@ -107,13 +109,15 @@
                         actor_no++;
                     }
                     message = message.replace('{{actor}}',actor_text);
+                    avatar = actors[0].thumbnail || null;
+                    avatar_url = actors[0].profile || null;
                 }
                 else
                     message = message.replace('{{actor}}','Someone');
                 if (anonymous_count > 0)
                     message = message.replace('{{anonymous}}',(anonymous_count == 1) ? 'Someone' : anonymous_count + ' persons');
 
-                return message;
+                return {'avatar': avatar, 'message': message, 'avatar_url': avatar_url};
             }
             return null;
         },

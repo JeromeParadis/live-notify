@@ -47,6 +47,43 @@
       text-decoration: underline;
       padding: 0; }
 
+.notify-summary ul li {
+  min-height: 34px;
+}
+.notify-summary ul li .notify-summary-avatar-block {
+  float: left;
+  padding: 2px 5px 2px 2px;
+  width: 30px;
+  height: 30px;
+}
+
+.notify-summary ul li .notify-summary-avatar {
+  width: 30px;
+}
+
+.notify-browser ul li {
+  min-height: 60px;
+  clear: both;
+}
+
+.notify-browser ul li .notify-note-avatar-block {
+  float: left;
+  padding: 5px 10px 5px 5px;
+  width: 50px;  
+  height: 50px;
+}
+
+.notify-browser ul li .notify-note-item-date {
+  width: 20%;
+  position: relative;
+  display: inline-block;
+  float: right;
+  margin: 0 10px 0 0;
+  text-align: right;
+  width: 20%;
+}
+
+
 input[type="button"].notify-icon {
   -moz-border-radius: 20px;
   -webkit-border-radius: 20px;

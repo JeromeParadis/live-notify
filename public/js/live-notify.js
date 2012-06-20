@@ -98,10 +98,10 @@ var LiveNotify = function(url,sessionid,options) {
           self.notes_summary.remove();
           self.notes_summary = null;
         }
-        if (self.notes_browser) {
-          self.notes_browser.remove();
-          self.notes_browser = null;
-        }
+        // if (self.notes_browser) {
+        //   self.notes_browser.remove();
+        //   self.notes_browser = null;
+        // }
         self.notes_all = null;
           
     });
