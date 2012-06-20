@@ -35,6 +35,7 @@ function Notify(app, io, options) {
 	var auth_plugin = options.auth_plugin || null;
 	this.callback_api = options.callback_api || null;
 	this.transport = new Transport(this);
+	this.debug_mode = options.debug || false;
 
 	var auth_options = {
 		rc: rsr.rc,
