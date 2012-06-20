@@ -80,7 +80,31 @@ var LiveNotify = function(url,sessionid,options) {
         //socket.emit('auth', { sessionid: self.sessionid });
         self.notifier = new Notifier();
     });
-    
+
+    // socket.on('reconnect', function (data) {
+    //     console.log("Reconnected!");
+    //     // Send the session info.
+    //     //socket.emit('auth', { sessionid: self.sessionid });
+    //     self.notifier = new Notifier();
+    // });
+
+    socket.on('disconnect', function (data) {
+        console.log("Disconnects!");
+        if (self.notifier) {
+          self.notifier.remove();
+          self.notifier = null;
+        }
+        if (self.notes_summary) {
+          self.notes_summary.remove();
+          self.notes_summary = null;
+        }
+        if (self.notes_browser) {
+          self.notes_browser.remove();
+          self.notes_browser = null;
+        }
+        self.notes_all = null;
+          
+    });
 
     socket.on('request_session_id', function(data) {
         socket.emit('session', {sessionid: self.sessionid});
