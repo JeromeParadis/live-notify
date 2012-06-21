@@ -157,13 +157,29 @@ var LiveNotify = function(url,sessionid,options) {
 
     // New notification received
     // ----------------------------------
-    socket.on('notify', function (data) {
+    socket.on('added_note', function (data) {
+        console.log('added_note');
         console.log(data);
 
         self.notifier.increase_count();
         if (self.notes_summary) {
             self.notes_summary.add_note(data);
         }
+    });
+
+    // Notification Updated
+    // ----------------------------------
+    socket.on('updated_note', function (data) {
+        console.log('updated_note');
+        console.log(data);
+    });
+
+    // Notification Deleted
+    // ----------------------------------
+    socket.on('deleted_note', function (id) {
+        console.log('deleted_note');
+        console.log(id);
+
     });
 
     // Create views

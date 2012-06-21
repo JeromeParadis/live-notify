@@ -172,8 +172,7 @@ function Notify(app, io, options) {
 	//if (app.resource) {
 	app.resource('api/message', Api.MessageApi(this), { format: 'json' });
 	app.resource('api/events', Api.EventsApi(this), { format: 'json' });
-	var event_api = Api.EventApi(this);
-	app.resource('api/event', event_api, { format: 'json' });
+	app.resource('api/event', Api.EventApi(this), { format: 'json' });
 	//app.resource('api/event', event_api, { format: 'json', load: event_api.load });
 	app.resource('api/session', Api.SessionApi(this), {format: 'json'});
 	
