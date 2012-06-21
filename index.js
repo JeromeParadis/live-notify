@@ -1,8 +1,8 @@
 var express= require('express');
 
-var SocketAuth = require('../socket-auth')
+var SocketAuth = require('socket-auth')
    ,Api = require('./lib/api')
-   ,RedSocket = require('../red-socket')
+   ,RedSocket = require('red-socket')
    ,models = require("./models/models")
    ,Transport = require("./lib/transport")
    ,Notifications = require("./lib/notifications");
@@ -31,11 +31,13 @@ function Notify(app, io, options) {
 	if (!options) options = {};
 	this.redis_prefix = options.redis_namespace || '';
 	this.models = models;
-	this.rsr = RedSocket(io, {debug: true, redis_prefix: this.redis_prefix});
+	this.debug_mode = options.debug || false;
+	this.log_errors = options.log_errors || true;
+	this.rsr = RedSocket(io, {debug: this.debug_mode, redis_prefix: this.redis_prefix});
 	var auth_plugin = options.auth_plugin || null;
 	this.callback_api = options.callback_api || null;
 	this.transport = new Transport(this);
-	this.debug_mode = options.debug || false;
+	this.api_key = options.api_key || "my super duper key is private";
 
 	var auth_options = {
 		rc: rsr.rc,
@@ -44,7 +46,12 @@ function Notify(app, io, options) {
 	
 	models.Backbone.setClient(this.rsr.rc);
 	models.Backbone.initServer(app);
+	models.debug = this.debug_mode;
 	
+	if (this.debug_mode) {
+		console.log('notify object:', this);
+
+	}
 	
 	
 	/**
@@ -52,7 +59,8 @@ function Notify(app, io, options) {
 	 */
 	var init = function() {
 		io.sockets.on('connection', function(socket) {
-			console.log('Connected!', socket.handshake.session);
+			if (this.debug_mode)
+				console.log('Connected!', socket.handshake.session);
 			NotificationSocket(socket, self);
 		});
 	
@@ -84,25 +92,29 @@ function Notify(app, io, options) {
 		
 		
 		var onSessionLoaded = function(err, session) {
-			console.log('onSessionLoaded()', session);
+			if (this.debug_mode)
+				console.log('onSessionLoaded()', session);
 			
 			// Bail out if the session is not set or the connection is not
 			// initialized yet.
 			if (!session || !socket) return;
 			
 			socket.on("get_initial_notes", function(options) {
-				console.log("get_initial_notes()");
+				if (this.debug_mode)
+					console.log("get_initial_notes()");
 				mark_all_read();
 				send_all_notes(true, options);
 			});
 
 			socket.on("get_notes", function(options) {
-				console.log('get_notes()', options);
+				if (this.debug_mode)
+					console.log('get_notes()', options);
 				send_all_notes(false, options);
 			});
 
 			socket.on("mark_notes_read", function() {
-				console.log("mark notes read()");
+				if (this.debug_mode)
+					console.log("mark notes read()");
 				mark_all_read(send_notification_count);
 			});
 			
@@ -114,7 +126,8 @@ function Notify(app, io, options) {
 		
 		var send_notification_count = function() {
 			notifications.get_notifications_count(function(err, nb_notes, nb_unread) {
-				console.log("Notes total, unread:", nb_notes, nb_unread);
+				if (this.debug_mode)
+					console.log("Notes total, unread:", nb_notes, nb_unread);
 				notify.rsr.r_send_user(socket.id, "notes-count", {
 					nb_notes: nb_notes,
 					nb_unread: nb_unread
@@ -124,7 +137,8 @@ function Notify(app, io, options) {
 		
 		
 		var mark_all_read = function(callback) {
-			console.log("mark_all_read()");
+			if (this.debug_mode)
+				console.log("mark_all_read()");
 			notifications.mark_all_read(callback);
 		};
 		
@@ -134,7 +148,8 @@ function Notify(app, io, options) {
 			var page = (options && options.page) || 1;
 			var items_per_page = (options && options.items_per_page) || 10;
 			notifications.get_notifications(page, items_per_page, function(err, data) {
-				console.log("Received notes!",data)
+				if (this.debug_mode)
+					console.log("Received notes!",data)
 				notify.rsr.r_send_user(socket.id, (initial) ? "notes-init" : "notes-received", {
 					notes: data.threads,
 					nb_total: data.nb_total,
@@ -157,7 +172,9 @@ function Notify(app, io, options) {
 	//if (app.resource) {
 	app.resource('api/message', Api.MessageApi(this), { format: 'json' });
 	app.resource('api/events', Api.EventsApi(this), { format: 'json' });
-	app.resource('api/event', Api.EventApi(this), { format: 'json' });
+	var event_api = Api.EventApi(this);
+	app.resource('api/event', event_api, { format: 'json' });
+	//app.resource('api/event', event_api, { format: 'json', load: event_api.load });
 	app.resource('api/session', Api.SessionApi(this), {format: 'json'});
 	
 	
@@ -171,7 +188,6 @@ function Notify(app, io, options) {
 	});
 
 	app.get('/models/models.js', function(req, res){
-		console.log("req.url",req.url)
 		res.sendfile(__dirname + '/models/models.js');
 	});
 
