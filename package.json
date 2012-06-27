@@ -1,6 +1,6 @@
 {
     "name": "live-notify"
-  , "version": "0.0.20"
+  , "version": "0.0.21"
   , "description": "Adds live notifications to web sites"
   , "homepage": "https://github.com/JeromeParadis/live-notify"
   , "keywords": ["notifications", "socket.io", "live", "real-time"]
@@ -13,15 +13,14 @@
       , "url": "https://github.com/JeromeParadis/live-notify.git"
     }
   , "dependencies": {
-        "socket.io": "0.8.7"
+        "socket.io": ">=0.8.7"
       , "hiredis": ">=0.1.14"
-      , "redis": "0.6.7"
-      , "connect": "1.8.5"
+      , "redis": ">=0.6.7"
+      , "connect": ">=1.8.5"
       , "express": ">= 2.5.9"
       , "express-resource": ">= 0.2.4"
       , "server-backbone-redis": ">= 0.0.7"
-      , "socket-auth": ">= 0.0.1"
-      , "red-socket": ">= 0.0.2"
+      , "socket-auth": ">= 0.0.4"
       ,"underscore"  : ">=1.1.2"
     }
   , "main": "index"
