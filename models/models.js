@@ -91,7 +91,7 @@
                 var avatar_url = null;
                 if (actors.length > 0)  {
                     var actor_no = 1;
-                    var actor_text = ''
+                    var actor_text = '<nobr>'
                     while(actor_no <= actors.length) {
                         var actor = actors[actor_no-1];
                         if (actor) {
@@ -108,6 +108,7 @@
                         }
                         actor_no++;
                     }
+                    actor_text += '</nobr>'
                     message = message.replace('{{actor}}',actor_text);
                     avatar = actors[0].thumbnail || null;
                     avatar_url = actors[0].profile || null;

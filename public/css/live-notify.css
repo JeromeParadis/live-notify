@@ -1,6 +1,8 @@
 
 .notify-notifier {
-  float: left; }
+  float: left;
+  position: absolute;
+}
 
 .notify-summary, .notify-browser {
   -moz-border-radius-bottomleft: 4px;
@@ -33,7 +35,7 @@
   padding: 2px;
   list-style: none; }
   .notify-summary ul li, .notify-browser ul li {
-    padding: 5px 0 5px 0; }
+    padding: 5px 5px 5px 0; }
     .notify-summary ul li.notify-summary-item, .notify-summary ul li.notify-more, .notify-browser ul li.notify-summary-item {
       border: 1px solid lightGray; }
     .notify-summary ul li.notify-note-item, .notify-browser ul li.notify-note-item {
