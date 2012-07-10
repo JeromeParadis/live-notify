@@ -114,6 +114,14 @@
                 }
                 else
                     message = message.replace('{{actor}}','Someone');
+                if (actors.length > 1) {
+                    message = message.replace('{{actor_plural_verb_s}}','');                   
+                    message = message.replace('{{actor_plural}}','s');
+                }
+                else {
+                    message = message.replace('{{actor_plural_verb_s}}','s');                    
+                    message = message.replace('{{actor_plural}}','');
+                }
                 if (anonymous_count > 0)
                     message = message.replace('{{anonymous}}',(anonymous_count == 1) ? 'Someone' : anonymous_count + ' persons');
 
