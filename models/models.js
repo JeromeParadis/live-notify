@@ -84,7 +84,10 @@
                 }
                 if (objects && message) {
                     for(obj_name in objects) {
-                        message = message.replace('{{' + obj_name + '}}', '<a href="' + objects[obj_name].url + '">' + objects[obj_name].name + '</a>')
+                        if (objects[obj_name].url || false)
+                            message = message.replace('{{' + obj_name + '}}', '<a href="' + objects[obj_name].url + '">' + objects[obj_name].name + '</a>');
+                        else
+                            message = message.replace('{{' + obj_name + '}}', objects[obj_name].name);
                     }
                 }
                 var avatar = null;
@@ -99,7 +102,7 @@
                                 actor_text += '<a href="' + actor.profile + '">' + actor.first_name + '</a> ';
                             else {
                                 var nb_others = actors.length - 2;
-                                actor_text += 'and <a href="#">' + nb_others + 'other' + (nb_others > 1 ? 's' : '') +  '</a>';
+                                actor_text += 'and <a href="#">' + nb_others + ' other' + (nb_others > 1 ? 's' : '') +  '</a>';
                                 break;
                             }
                         }
