@@ -1,6 +1,8 @@
 (function (notify) {
     
-    var server = false, models;
+    var server = false;
+    //if (typeof models === 'undefined')
+    //    var models;
     
     if (typeof exports !== 'undefined') {
         Backbone = require('server-backbone-redis');
